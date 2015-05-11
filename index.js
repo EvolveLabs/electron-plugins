@@ -76,7 +76,7 @@ function load(appContext, callback) {
 			var plugins = JSON.parse(contents)
 			var context = {
 				plugins: plugins,
-				pluginsDir: path.join(dirs, 'plugins'),
+				pluginsDir: path.join(appData, 'plugins'),
 				appContext: appContext
 			}
 		    async.map(
