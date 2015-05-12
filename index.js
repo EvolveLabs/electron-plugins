@@ -65,7 +65,9 @@ function loadPlugin(context, results, callback) {
 }
 
 function load(appContext, callback) {
-	fs.readFile('package.json', {encoding: 'utf8'}, function (err, contents) {
+    var appDir = path.dirname(process.mainModule.filename)
+    var packagePath = path.join(appDir, 'package.json')
+	fs.readFile(packagePath, {encoding: 'utf8'}, function (err, contents) {
 		if(err) return callback(err);
 		var config = JSON.parse(contents)
 		var dirs = new AppDirectory(config.name)
