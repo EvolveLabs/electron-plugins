@@ -67,28 +67,32 @@ function loadPlugin(context, results, callback) {
 function load(appContext, callback) {
     var appDir = path.dirname(process.mainModule.filename)
     var packagePath = path.join(appDir, 'package.json')
-	fs.readFile(packagePath, {encoding: 'utf8'}, function (err, contents) {
-		if(err) return callback(err);
-		var config = JSON.parse(contents)
-		var dirs = new AppDirectory(config.name)
-		var appData = path.dirname(dirs.userData())
-		var currentPath = path.join(appData, '.current')
-		fs.readFile(currentPath, {encoding: 'utf8'}, function (err, contents) {
+    fs.readFile(packagePath, {encoding: 'utf8'}, function (err, contents) {
+        if(err) return callback(err);
+        var config = JSON.parse(contents)
+        var dirs = new AppDirectory({
+            appName: config.name,
+            appAuthor: config.publisher
+        })
+        var appData = dirs.userData()
+        console.log('appData: ' + appData)
+        var currentPath = path.join(appData, '.current')
+        fs.readFile(currentPath, {encoding: 'utf8'}, function (err, contents) {
             var plugins = !err ? JSON.parse(contents) : config.plugins
-			var context = {
-				plugins: plugins,
-				pluginsDir: path.join(appData, 'plugins'),
-				appContext: appContext
-			}
-		    async.map(
-		        getPlugins(context.plugins),
-		        getPluginPackage.bind(context),
-		        function (err, results) {
-		            if(err) return callback(err)
-		            loadPlugin(context, results, callback)  
-		        })
-		})
-	})
+            var context = {
+                plugins: plugins,
+                pluginsDir: path.join(appData, 'plugins'),
+                appContext: appContext
+            }
+            async.map(
+                getPlugins(context.plugins),
+                getPluginPackage.bind(context),
+                function (err, results) {
+                    if(err) return callback(err)
+                    loadPlugin(context, results, callback)  
+                })
+        })
+    })
 }
 
 module.exports = {
