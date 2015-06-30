@@ -1,6 +1,6 @@
 {
   "name": "electron-plugins",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Plugin loader for electron applications.",
   "main": "index.js",
   "scripts": {
