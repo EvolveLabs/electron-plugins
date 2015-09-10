@@ -36,3 +36,6 @@ module.exports = Plugin
 ## Examples
 * [electron-updater-sample](https://github.com/EvolveLabs/electron-updater-sample)
 * [electron-updater-sample-plugin](https://github.com/EvolveLabs/electron-updater-sample-plugin)
+
+## Related
+* [electron-updater](https://github.com/EvolveLabs/electron-updater)
