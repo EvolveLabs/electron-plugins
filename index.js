@@ -78,7 +78,7 @@ function load(appContext, callback) {
         console.log('appData: ' + appData)
         var currentPath = path.join(appData, '.current')
         fs.readFile(currentPath, {encoding: 'utf8'}, function (err, contents) {
-            var plugins = !err ? JSON.parse(contents) : config.plugins
+            var plugins = (!err ? JSON.parse(contents) : config.plugins) || {}
             var context = {
                 plugins: plugins,
                 pluginsDir: path.join(appData, 'plugins'),
