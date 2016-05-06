@@ -61,7 +61,7 @@ function loadPlugin(context, results, callback) {
         return callback(err)
     }
 
-    callback(null, dependencies)
+    callback(null, dependencies, modules)
 }
 
 function load(appContext, callback) {
