@@ -105,11 +105,11 @@ function load( appContext, callback) {
           // Check to see if this is a "relative path", ASSUME ~ is homedir for all platforms.
           if( pluginPath.slice( 0, 1 ) === '~' )
           {
-            pluginPath = require( 'os' ).homedir() + pluginPath.substr(1);
+            pluginPath = path.join( require( 'os' ).homedir(), pluginPath.substr(1) );
           }
           if( pluginPath.slice( -1 ) === ':' )
           {
-            pluginPath = pluginPath.slice( 0, -1 ) + config.name;
+            pluginPath = path.join( pluginPath.slice( 0, -1 ), config.name );
           }
           if ( beLoud ) { console.log( '[electron-plugins] Using provided plugin path. ' + pluginPath ); }
         }
