@@ -19,6 +19,16 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 });
 ```
+The context object may take the following additional, optional parameters:
+ * pluginPath: String: The path to find plugins. Defaults to ApplicationRoot/plugins
+  * Substitutes:
+   ~ - User home dir per os.homedir() IF first character
+   : - Application Name per package.json IF last character
+    * Examples:
+    ~/.config/: - /home/user/.config/MyApp
+    ~: - /home/usr/MyApp
+ * makePluginPath: Boolean: Create the plugin path if it is not found. Defaults to false
+ * quiet: Boolean: Do not write to the console. Defaults to false.
 
 Your plugin should export a constructor function, which is passed the context object upon instantiation. You can put whatever you want onto the context object.
 ```

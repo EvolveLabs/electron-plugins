@@ -3,6 +3,8 @@ var path = require('path'),
     async = require('async'),
     AppDirectory = require('appdirectory')
 
+var beLoud = true;
+
 function getPlugins(plugins) {
     var mapped = []
     Object.getOwnPropertyNames(plugins).forEach(function (name) {
@@ -64,9 +66,26 @@ function loadPlugin(context, results, callback) {
     callback(null, dependencies, modules)
 }
 
-function load(appContext, callback) {
-    var appDir = path.dirname(process.mainModule.filename)
-    var packagePath = path.join(appDir, 'package.json')
+function load( appContext, callback) {
+    let pluginPath = '';
+    let makePluginPath = false;
+
+    if ( appContext.context.hasOwnProperty( 'pluginPath' ) )
+    {
+      pluginPath = appContext.context.pluginPath;
+    }
+
+    if ( appContext.context.hasOwnProperty( 'makePluginPath' ) )
+    {
+      makePluginPath = true;
+    }
+
+    if ( appContext.context.hasOwnProperty( 'quiet' ) ) {
+      beLoud = false;
+    }
+
+    var appDir = path.dirname(process.mainModule.filename);
+    var packagePath = path.join(appDir, 'package.json');
     fs.readFile(packagePath, {encoding: 'utf8'}, function (err, contents) {
         if(err) return callback(err);
         var config = JSON.parse(contents)
@@ -75,23 +94,53 @@ function load(appContext, callback) {
             appAuthor: config.publisher
         })
         var appData = dirs.userData()
-        console.log('appData: ' + appData)
-        var currentPath = path.join(appData, '.current')
-        fs.readFile(currentPath, {encoding: 'utf8'}, function (err, contents) {
-            var plugins = (!err ? JSON.parse(contents) : config.plugins) || {}
-            var context = {
-                plugins: plugins,
-                pluginsDir: path.join(appData, 'plugins'),
-                appContext: appContext
-            }
-            async.map(
-                getPlugins(context.plugins),
-                getPluginPackage.bind(context),
-                function (err, results) {
-                    if(err) return callback(err)
-                    loadPlugin(context, results, callback)  
-                })
-        })
+        if ( beLoud ) { console.log('[electron-plugins] appData: ' + appData); }
+
+        // If the plugin path is not provided, use the default.
+        if ( !pluginPath ) {
+          pluginPath = path.join(appData, 'plugins');
+          if ( beLoud ) { console.log( '[electron-plugins] Using default plugin path.' + pluginPath ); }
+        }
+        else {
+          // Check to see if this is a "relative path", ASSUME ~ is homedir for all platforms.
+          if( pluginPath.slice( 0, 1 ) === '~' )
+          {
+            pluginPath = require( 'os' ).homedir() + pluginPath.substr(1);
+          }
+          if( pluginPath.slice( -1 ) === ':' )
+          {
+            pluginPath = pluginPath.slice( 0, -1 ) + config.name;
+          }
+          if ( beLoud ) { console.log( '[electron-plugins] Using provided plugin path. ' + pluginPath ); }
+        }
+        var currentPath = path.join( pluginPath, '.current' )
+
+        // If the plugin path does not exist, log it and bail.
+        if( !fs.existsSync( pluginPath ) ) {
+          if ( beLoud ) { console.log( '[electron-plugins] Plugin path does not exist.'); }
+          if ( makePluginPath ) {
+            fs.mkdirSync( pluginPath );
+            if ( beLoud ) { console.log( '[electron-plugins] Created plugin path. '); }
+          }
+        }
+        else {
+          if ( beLoud ) { console.log( '[electron-plugins] Loading plugins from ' + pluginPath ); }
+          fs.readFile(currentPath, {encoding: 'utf8'}, function (err, contents) {
+              var plugins = (!err ? JSON.parse(contents) : config.plugins) || {}
+              var context = {
+                  plugins: plugins,
+                  pluginsDir: pluginPath,
+                  appContext: appContext
+              }
+              async.map(
+                  getPlugins(context.plugins),
+                  getPluginPackage.bind(context),
+                  function (err, results) {
+                      if(err) return callback(err)
+                      loadPlugin(context, results, callback)
+                  })
+          })
+        }
     })
 }
 
