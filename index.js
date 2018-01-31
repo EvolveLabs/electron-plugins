@@ -4,6 +4,7 @@ const async = require("async");
 const AppDirectory = require("appdirectory");
 const compareVersions = require( "compare-versions");
 
+
 var beLoud = true;
 
 function getPlugins(plugins) {
@@ -63,7 +64,6 @@ function loadPlugin(context, results, callback) {
     } catch (err) {
         return callback(err);
     }
-
     callback(null, dependencies, modules);
 }
 
@@ -91,10 +91,9 @@ function mkDirByPathSync(targetDir, {isRelativeToScript = false} = {}) {
   }, initDir);
 }
 
-function substitutePluginPath( passedPath, callback ) {
+function substitutePluginPath( passedPath, appDir, callback ) {
   let pluginPath = "";
 
-  var appDir = path.dirname(process.mainModule.filename);
   var packagePath = path.join(appDir, "package.json");
 
   fs.readFile(packagePath, {encoding: "utf8"}, function (err, contents) {
@@ -124,9 +123,10 @@ function substitutePluginPath( passedPath, callback ) {
     } );
 }
 
-function discover( pluginRelPath, useDev, callback ) {
+function discover( pluginRelPath, appD, useDev, callback ) {
   let foundPlugins = {};
-  substitutePluginPath( pluginRelPath, function ( err, pluginPath ) {
+  var appDir = appD ? appD : path.dirname(process.mainModule.filename);
+  substitutePluginPath( pluginRelPath, appDir, function ( err, pluginPath ) {
     if( fs.existsSync( pluginPath ) ) {
       dirContents = fs.readdirSync( pluginPath );
       for( var contLoop=0; contLoop < dirContents.length; contLoop++ )
@@ -143,10 +143,14 @@ function discover( pluginRelPath, useDev, callback ) {
                 {
                   foundPlugins[ dirContents[ contLoop ] ] = "LINK";
                 }
+                continue;
               }
-              else if( compareVersions( newestVersion, versions[ verLoop ] ) < 0 )
+              else if (foundPlugins[ dirContents[ contLoop ] ] )
               {
-                newestVersion = versions[ verLoop ];
+                if( compareVersions( newestVersion, versions[ verLoop ] ) < 0 )
+                {
+                  newestVersion = versions[ verLoop ];
+                }
               }
             }
           }
@@ -172,7 +176,8 @@ function load( appContext, callback) {
   }
 
   let passedPath = appContext.context.hasOwnProperty( "pluginPath" ) ? appContext.context.pluginPath : "";
-  substitutePluginPath( passedPath, function ( err, pluginPath ) {
+  var appDir = appContext.context.hasOwnProperty( "appDir") ? appContext.context.appDir : path.dirname(process.mainModule.filename);
+  substitutePluginPath( passedPath, appDir, function ( err, pluginPath ) {
       var currentPath = path.join( pluginPath, ".current" )
 
       // If the plugin path does not exist, log it and bail.
